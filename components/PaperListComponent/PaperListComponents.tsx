@@ -1,15 +1,22 @@
 import { sql } from "@/lib/db";
 import SimilarPapers from "../SimilarPapersComponent/SimilarPapersComponent";
 import Link from "next/link";
-import LikeButtons from "../LikeButtonsComponent/LikeButtonsComponent";
+import LikeButton from "../LikeButtonComponent/LikeButtonComponent";
+import { cookies } from "next/headers";
 
 export default async function PaperList() {
+  const visitorId = (await cookies()).get("visitor_id")?.value ?? "";
+
   const papers = await sql`
-    SELECT p.id, p.title, p.authors, p.category, p.published_at, f.liked
-    FROM papers p
-    LEFT JOIN feedback f ON f.paper_id = p.id
-    ORDER BY p.published_at DESC
-    LIMIT 20
+  SELECT p.id, p.title, p.authors, p.category, p.published_at,
+    (SELECT count(*)::int FROM likes l WHERE l.paper_id = p.id) AS like_count,
+    EXISTS (
+      SELECT 1 FROM likes l
+      WHERE l.paper_id = p.id AND l.visitor_id = ${visitorId}
+    ) AS liked
+  FROM papers p
+  ORDER BY p.published_at DESC
+  LIMIT 20
 `;
 
   return (
@@ -31,7 +38,11 @@ const PaperCard = ({ paper }: { paper: any }) => {
       <p className="text-gray-400 text-xs mt-4">
         Published at: {new Date(paper.published_at).toLocaleDateString()}
       </p>
-      <LikeButtons paperId={paper.id} initial={paper.liked} />
+      <LikeButton
+        paperId={paper.id}
+        initialLiked={paper.liked}
+        initialCount={paper.like_count}
+      />
       <SimilarPapers paperId={paper.id} />
     </div>
   );

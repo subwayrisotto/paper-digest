@@ -3,7 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { sql } from "@/lib/db";
 import SimilarPapers from "@/components/SimilarPapersComponent/SimilarPapersComponent";
-import LikeButtons from "@/components/LikeButtonsComponent/LikeButtonsComponent";
+import LikeButton from "@/components/LikeButtonComponent/LikeButtonComponent";
+import { cookies } from "next/headers";
 
 export default function Paper({ params }: { params: Promise<{ id: string }> }) {
   return (
@@ -23,13 +24,19 @@ async function PaperDetail({ params }: { params: Promise<{ id: string }> }) {
   const paperId = Number(id);
   if (!Number.isInteger(paperId) || paperId < 1) notFound();
 
+  const visitorId = (await cookies()).get("visitor_id")?.value ?? "";
+
   const rows = await sql`
-        SELECT p.id, p.title, p.authors, p.abstract, p.category,
-        p.published_at, p.arxiv_id, f.liked
-        FROM papers p
-        LEFT JOIN feedback f ON f.paper_id = p.id
-        WHERE p.id = ${paperId}
-      `;
+  SELECT p.id, p.title, p.authors, p.abstract, p.category,
+         p.published_at, p.arxiv_id,
+    (SELECT count(*)::int FROM likes l WHERE l.paper_id = p.id) AS like_count,
+    EXISTS (
+      SELECT 1 FROM likes l
+      WHERE l.paper_id = p.id AND l.visitor_id = ${visitorId}
+    ) AS liked
+  FROM papers p
+  WHERE p.id = ${paperId}
+`;
   if (rows.length === 0) notFound();
   const paper = rows[0];
 
@@ -50,7 +57,11 @@ async function PaperDetail({ params }: { params: Promise<{ id: string }> }) {
         View on arXiv
       </a>
 
-      <LikeButtons paperId={paper.id} initial={paper.liked} />
+      <LikeButton
+        paperId={paper.id}
+        initialLiked={paper.liked}
+        initialCount={paper.like_count}
+      />
       <SimilarPapers paperId={paper.id} />
     </article>
   );
