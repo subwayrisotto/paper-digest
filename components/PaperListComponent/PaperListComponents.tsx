@@ -1,5 +1,6 @@
 import { sql } from "@/lib/db";
 import SimilarPapers from "../SimilarPapersComponent/SimilarPapersComponent";
+import Link from "next/link";
 
 export default async function PaperList() {
   const papers = await sql`
@@ -20,7 +21,9 @@ export default async function PaperList() {
 const PaperCard = ({ paper }: { paper: any }) => {
   return (
     <div className="border rounded p-4 mb-4">
-      <h2 className="text-xl font-bold">{paper.title}</h2>
+      <Link href={`/papers/${paper.id}`}>
+        <h2 className="text-xl font-bold">{paper.title}</h2>
+      </Link>
       <p className="text-gray-600">{paper.authors}</p>
       <div>
         <p className="text-gray-400 text-xs mt-4">

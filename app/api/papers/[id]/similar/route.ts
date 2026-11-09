@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { sql } from "@/lib/db";
+import { getSimilarPapers } from "@/lib/papers";
 
 export async function GET(
   _req: Request,
@@ -11,13 +11,6 @@ export async function GET(
     return NextResponse.json({ error: "Invalid id" }, { status: 400 });
   }
 
-  const rows = await sql`SELECT id, title,
-       1 - (embedding <=> (SELECT embedding FROM papers WHERE id = ${paperId})) AS similarity
-        FROM papers
-        WHERE id != ${paperId} AND embedding IS NOT NULL
-        ORDER BY embedding <=> (SELECT embedding FROM papers WHERE id = ${paperId})
-        LIMIT 5;
-    `;
-
+  const rows = await getSimilarPapers(paperId);
   return NextResponse.json(rows);
 }

@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import React, { useState } from "react";
 
 function SimilarPapers(props: { paperId: number }) {
@@ -14,12 +15,12 @@ function SimilarPapers(props: { paperId: number }) {
       if (!res.ok) throw new Error(`Request failed: ${res.status}`);
       const data = await res.json();
       setResults(data);
+      setOpen(true);
     } catch (error) {
       console.error("Error fetching similar papers:", error);
     } finally {
       setLoading(false);
     }
-    setOpen(true);
   }
 
   function handleClick() {
@@ -45,8 +46,10 @@ function SimilarPapers(props: { paperId: number }) {
                 <ul className="list-disc list-inside d-flex flex-row">
                   {results.map((paper) => (
                     <li key={paper.id} className="my-1">
-                      <strong>{paper.title}</strong> (Similarity:{" "}
-                      {Math.round(paper.similarity * 100)}%)
+                      <Link href={`/papers/${paper.id}`}>
+                        <strong>{paper.title}</strong> (Similarity:{" "}
+                        {Math.round(paper.similarity * 100)}%)
+                      </Link>
                     </li>
                   ))}
                 </ul>
