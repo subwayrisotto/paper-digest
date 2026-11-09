@@ -23,7 +23,7 @@ const PaperCard = ({ paper }: { paper: any }) => {
       <h2 className="text-xl font-bold">{paper.title}</h2>
       <p className="text-gray-600">{paper.authors}</p>
       <div>
-        <p className="text-gray-400 text-xs">
+        <p className="text-gray-400 text-xs mt-4">
           Published at: {new Date(paper.published_at).toLocaleDateString()}
         </p>
         <SimilarPapers paperId={paper.id} />
