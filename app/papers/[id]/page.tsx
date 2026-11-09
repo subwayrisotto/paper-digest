@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { sql } from "@/lib/db";
 import SimilarPapers from "@/components/SimilarPapersComponent/SimilarPapersComponent";
+import LikeButtons from "@/components/LikeButtonsComponent/LikeButtonsComponent";
 
 export default function Paper({ params }: { params: Promise<{ id: string }> }) {
   return (
@@ -23,10 +24,12 @@ async function PaperDetail({ params }: { params: Promise<{ id: string }> }) {
   if (!Number.isInteger(paperId) || paperId < 1) notFound();
 
   const rows = await sql`
-    SELECT id, title, authors, abstract, category, published_at, arxiv_id
-    FROM papers
-    WHERE id = ${paperId}
-  `;
+        SELECT p.id, p.title, p.authors, p.abstract, p.category,
+        p.published_at, p.arxiv_id, f.liked
+        FROM papers p
+        LEFT JOIN feedback f ON f.paper_id = p.id
+        WHERE p.id = ${paperId}
+      `;
   if (rows.length === 0) notFound();
   const paper = rows[0];
 
@@ -47,6 +50,7 @@ async function PaperDetail({ params }: { params: Promise<{ id: string }> }) {
         View on arXiv
       </a>
 
+      <LikeButtons paperId={paper.id} initial={paper.liked} />
       <SimilarPapers paperId={paper.id} />
     </article>
   );
